@@ -6,7 +6,7 @@ Five experiments, built entirely from the paper authors' own code, that locate t
 headline claim's load-bearing assumptions. Presented 2026-08-13 at the AI@Sogang
 reinforcement-learning study group.
 
-📊 **[Slide deck (52 slides, Korean)](https://pjh720.github.io/saez-vs-ai-economist/)**
+📊 **[Slide deck (26 slides, Korean)](https://pjh720.github.io/saez-vs-ai-economist/)**
 · 📄 **[Full results](experiments/RESULTS.md)** (Korean, as-run) · **[English](docs/RESULTS.en.md)**
 
 ---
@@ -136,7 +136,7 @@ comparable:
 ## Layout
 
 ```
-├── index.html              # 52-slide deck (Korean) — GitHub Pages entry point
+├── index.html              # 26-slide deck (Korean) — GitHub Pages entry point
 ├── setup.sh                # clone upstream @ pinned SHA, build venv
 ├── pyproject.toml          # verified-minimal deps (uv.lock pins transitives)
 ├── experiments/
