@@ -1,6 +1,6 @@
-# The AI Economist 발표 — DGX Spark 실습 결과
+# The AI Economist 발표 — 실습 결과
 
-**실행:** 2026-08-13, NVIDIA GB10 (DGX Spark, aarch64), Python 3.12 / numpy 1.26.4
+**실행:** 2026-08-13, aarch64 Linux, Python 3.12 / numpy 1.26.4
 **코드:** `salesforce/ai-economist` 공식 저장소 함수를 그대로 호출 (저장소 무수정, `compat.py`의 `np.int` 셰임만 사용)
 
 **재검증:** 2026-08-18, arm64 macOS에서 fresh clone(핀 커밋 `a84d5f3`) + fresh venv로 전체 재실행

@@ -1,7 +1,7 @@
 # Verified-minimal runtime set for the E1-E5 harness.
 #
 # Derived empirically from the site-packages of the venv that actually produced
-# the committed results on the DGX Spark run (2026-08-13), not from
+# the committed results on the original aarch64 Linux run (2026-08-13), not from
 # ai-economist/requirements.txt -- that file pins 100+ packages for the full
 # RLlib training stack (including numpy==1.21.0), which this harness never touches
 # and which will not install on Python 3.12.

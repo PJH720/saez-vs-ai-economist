@@ -3,7 +3,7 @@
 English translation of [`experiments/RESULTS.md`](../experiments/RESULTS.md), which is
 the as-run Korean original and remains canonical.
 
-**Run:** 2026-08-13, NVIDIA GB10 (DGX Spark, aarch64), Python 3.12 / numpy 1.26.4
+**Run:** 2026-08-13, aarch64 Linux, Python 3.12 / numpy 1.26.4
 **Re-verified:** 2026-08-18, arm64 macOS, fresh clone + fresh venv — all five numeric
 tables byte-identical.
 **Code:** `salesforce/ai-economist` functions called verbatim; the repository is

@@ -71,8 +71,8 @@ result rests on the free-market and US-Federal rows, which are not close.)*
 
 ## Reproducibility
 
-The original run was on an NVIDIA GB10 (DGX Spark, **aarch64 Linux**). Re-running
-the whole harness on **arm64 macOS** from a fresh clone and a fresh venv:
+The original run was on **aarch64 Linux**. Re-running the whole harness on
+**arm64 macOS** from a fresh clone and a fresh venv:
 
 | | |
 |---|---|
@@ -229,7 +229,7 @@ Saez(2001) 베이스라인, 특정 후생함수로 채점. 비교는 RL이 잘 �
 
 ### 재현성
 
-원 실행은 DGX Spark(aarch64 Linux), 재검증은 arm64 macOS에서 fresh clone + fresh venv로
+원 실행은 aarch64 Linux, 재검증은 arm64 macOS에서 fresh clone + fresh venv로
 전체 재실행했습니다 → **수치 표 5/5 완전 일치**. E5의 확률적 탐색(무작위 40,000회 + CEM
 30세대)까지 seed 고정으로 동일하게 재현됩니다.
 

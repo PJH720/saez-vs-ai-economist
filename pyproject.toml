@@ -7,8 +7,9 @@ requires-python = "==3.12.*"
 license = { text = "MIT" }
 
 # Verified-minimal runtime set. Derived empirically from the site-packages of the
-# venv that actually produced the committed results on the DGX Spark run
-# (2026-08-13) -- NOT from ai-economist/requirements.txt, which pins 100+ packages
+# venv that actually produced the committed results on the original aarch64
+# Linux run (2026-08-13) -- NOT from ai-economist/requirements.txt, which pins
+# 100+ packages
 # for the full RLlib training stack (including numpy==1.21.0) that this harness
 # never touches and that will not install on Python 3.12.
 #
