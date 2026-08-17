@@ -1,0 +1,44 @@
+# ---------------------------------------------------------------------------
+# Upstream repository -- deliberately NOT vendored.
+#
+# The central claim of this repo is that the authors' own functions were called
+# unmodified. A reader who clones upstream at the pinned commit themselves gets
+# stronger evidence than a vendored copy they would have to diff. ./setup.sh
+# clones it to exactly this path, which experiments/compat.py hardcodes.
+# ---------------------------------------------------------------------------
+/ai-economist/
+
+# ---------------------------------------------------------------------------
+# Non-shippable material.
+#
+# These patterns are a second line of defence only. The actual exclusion is
+# physical: the private material lives outside this repo, in
+# ../_private_ai-economist-talk/ . Relying on ignore patterns alone would make
+# the pre-push leak gate pass vacuously -- `git status` cannot see an ignored
+# file, so a stale PDF still sitting in the tree would look identical to a clean
+# tree. The gate therefore uses `find`, not `git status`, for these types.
+#
+#   *.pdf   paywalled papers (Saez 2001 is Oxford Academic subscription content)
+#   *.csv   KakaoTalk group-chat export naming five third parties
+#   *.m4a   NotebookLM-generated derivative audio
+#   *.mhtml saved copyrighted web pages
+# ---------------------------------------------------------------------------
+*.pdf
+*.csv
+*.m4a
+*.mhtml
+
+# Python environment / caches
+.venv/
+__pycache__/
+*.py[cod]
+
+# Agent + editor session state (local transcripts and logs)
+.remember/
+.omc/
+.claude/
+CLAUDE.md
+
+# macOS
+.DS_Store
+__MACOSX/

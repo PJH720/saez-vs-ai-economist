@@ -1,0 +1,32 @@
+[project]
+name = "saez-vs-ai-economist"
+version = "1.0.0"
+description = "A falsification harness for The AI Economist's headline 16% claim, built from the authors' own code"
+readme = "README.md"
+requires-python = "==3.12.*"
+license = { text = "MIT" }
+
+# Verified-minimal runtime set. Derived empirically from the site-packages of the
+# venv that actually produced the committed results on the DGX Spark run
+# (2026-08-13) -- NOT from ai-economist/requirements.txt, which pins 100+ packages
+# for the full RLlib training stack (including numpy==1.21.0) that this harness
+# never touches and that will not install on Python 3.12.
+#
+# Notably absent and NOT needed: gym, ray/rllib, warp_drive, pandas, torch.
+# Those imports exist in the upstream tree but sit on guarded paths our call
+# sites never reach.
+#
+# GPUtil is deliberately omitted: experiments/compat.py substitutes a stub,
+# because the real package imports distutils, which Python 3.12 removed.
+dependencies = [
+    "numpy==1.26.4",         # exact pin: >=1.24 removed np.int, which compat.py shims back
+    "scipy==1.14.1",         # aie_lib.trend_summary -> scipy.stats.spearmanr
+    "matplotlib==3.9.2",     # figure generation
+    "pycryptodome==3.21.0",  # ai_economist.foundation imports Crypto
+    "lz4==4.3.3",            # ai_economist.foundation imports lz4
+]
+
+# This project is a set of standalone analysis scripts, not an importable package.
+# Nothing here is built or distributed; uv only manages the environment.
+[tool.uv]
+package = false

@@ -1,0 +1,20 @@
+# Verified-minimal runtime set for the E1-E5 harness.
+#
+# Derived empirically from the site-packages of the venv that actually produced
+# the committed results on the DGX Spark run (2026-08-13), not from
+# ai-economist/requirements.txt -- that file pins 100+ packages for the full
+# RLlib training stack (including numpy==1.21.0), which this harness never touches
+# and which will not install on Python 3.12.
+#
+# Notably absent and NOT needed: gym, ray/rllib, warp_drive, pandas, torch.
+# Those imports exist in the upstream tree but sit on guarded paths our call
+# sites never reach.
+
+numpy==1.26.4         # exact pin: >=1.24 removed np.int, which compat.py shims back
+scipy==1.14.1         # aie_lib.trend_summary -> scipy.stats.spearmanr
+matplotlib==3.9.2     # figure generation
+pycryptodome==3.21.0  # ai_economist.foundation imports Crypto
+lz4==4.3.3            # ai_economist.foundation imports lz4
+
+# GPUtil is deliberately omitted: compat.py substitutes a stub, because the real
+# package imports distutils, which Python 3.12 removed.

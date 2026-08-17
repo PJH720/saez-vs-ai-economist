@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The AI Economist - AI@Sogang</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-start: #0a0e27;
+            --bg-end: #1a1e3e;
+            --primary: #00d4ff;
+            --secondary: #ff6b35;
+            --highlight: #ffd700;
+            --text: #ffffff;
+            --text-muted: #a0a5b1;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+            color: var(--text);
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.6;
+            word-break: keep-all;
+        }
+
+        /* UI Elements */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .slide-counter {
+            position: fixed;
+            bottom: 24px;
+            right: 32px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            z-index: 100;
+            background: var(--glass-bg);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Slide Container */
+        .slides-container {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.6s ease, transform 0.6s ease;
+            transform: translateY(20px) scale(0.98);
+            display: flex;
+            flex-direction: column;
+            padding: 5% 8%;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        /* Slide Layouts & Typography */
+        h1, h2, h3 {
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .title-slide {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .title-slide h1 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, var(--primary), #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .title-slide h2 {
+            font-size: 2.2rem;
+            color: var(--text-muted);
+            margin-bottom: 3rem;
+            font-weight: 400;
+        }
+
+        .title-slide .authors, .title-slide .presenter {
+            font-size: 1.4rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .section-label {
+            display: inline-block;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .slide-title {
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            color: #fff;
+            border-bottom: 2px solid var(--glass-border);
+            padding-bottom: 1rem;
+        }
+
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            font-size: 1.6rem;
+        }
+
+        /* Glass Cards */
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(12px);
+        }
+
+        .two-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            flex: 1;
+        }
+
+        /* Lists */
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        ul li {
+            position: relative;
+            padding-left: 2rem;
+            margin-bottom: 1.2rem;
+        }
+
+        ul li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* Specific Elements */
+        .highlight {
+            color: var(--highlight);
+            font-weight: bold;
+        }
+
+        .accent {
+            color: var(--primary);
+        }
+
+        .code-block {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            font-size: 1.4rem;
+            color: var(--primary);
+            margin: 1.5rem 0;
+        }
+
+        .callout {
+            background: rgba(255, 107, 53, 0.15);
+            border-left: 4px solid var(--secondary);
+            padding: 1.5rem;
+            border-radius: 0 8px 8px 0;
+            font-size: 1.5rem;
+        }
+
+        .big-number {
+            font-size: 8rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-align: center;
+            text-shadow: 0 0 30px rgba(0, 212, 255, 0.4);
+            margin: 2rem 0;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 2rem 0;
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--glass-bg);
+        }
+
+        th, td {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        /* Images */
+        .img-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 1rem;
+            flex: 1;
+            min-height: 0;
+        }
+        
+        .img-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+        }
+
+        /* Diagram / Flow */
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 2rem 0;
+            background: var(--glass-bg);
+            padding: 2rem;
+            border-radius: 16px;
+        }
+        
+        .flow-diagram span {
+            color: var(--highlight);
+        }
+
+        /* Speaker Notes Panel */
+        .speaker-notes-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 35vh;
+            background: rgba(10, 14, 39, 0.95);
+            border-top: 2px solid var(--primary);
+            z-index: 1000;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+        }
+
+        .speaker-notes-panel.visible {
+            transform: translateY(0);
+        }
+
+        .notes-header {
+            padding: 12px 24px;
+            background: rgba(0, 212, 255, 0.1);
+            font-weight: bold;
+            color: var(--primary);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .notes-content {
+            padding: 24px;
+            font-size: 1.5rem;
+            overflow-y: auto;
+            flex: 1;
+            line-height: 1.6;
+        }
+
+        /* Help Overlay */
+        .help-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s;
+            backdrop-filter: blur(5px);
+        }
+        .help-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .help-content {
+            background: var(--bg-end);
+            padding: 3rem;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            max-width: 600px;
+        }
+        .help-content h2 { margin-bottom: 2rem; color: var(--primary); }
+        .help-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+        kbd {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            border-bottom: 2px solid rgba(0,0,0,0.5);
+        }
+
+        /* Animations */
+        .slide.active .content-area > * {
+            animation: slideUpFade 0.6s ease forwards;
+            opacity: 0;
+        }
+        
+        .slide.active .content-area > *:nth-child(1) { animation-delay: 0.2s; }
+        .slide.active .content-area > *:nth-child(2) { animation-delay: 0.4s; }
+        .slide.active .content-area > *:nth-child(3) { animation-delay: 0.6s; }
+        .slide.active .content-area > *:nth-child(4) { animation-delay: 0.8s; }
+
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="slide-counter" id="slide-counter">1 / 26</div>
+
+    <div class="slides-container" id="slides">
+        
+        <!-- Slide 1 -->
+        <div class="slide title-slide" data-notes="강화학습을 활용해 형평성과 생산성을 동시에 개선하는 조세 정책 설계 논문, The AI Economist 발표를 시작해보겠습니다.">
+            <h1>The AI Economist</h1>
+            <h2>Improving Equality and Productivity with AI-Driven Tax Policies</h2>
+            <div class="authors">Zheng, Trott, Srinivasa, Naik, Gruesbeck, Parkes, Socher (Salesforce Research + Harvard, 2020)</div>
+            <div class="presenter" style="margin-top: 2rem; color: var(--primary);">발표: 박재현 · AI@Sogang RL 스터디 · 2026-08-13</div>
+        </div>
+
+        <!-- Slide 2 -->
+        <div class="slide" data-notes="목차라기보다 '우리가 지금 뭘 모르고 뭘 알아야 하는지'를 먼저 정리하고 가겠습니다.">
+            <h2 class="slide-title">우리는 지금 어디에 있나</h2>
+            <div class="content-area glass-card">
+                <ul>
+                    <li><span class="highlight">CS285 진도:</span> Lecture 1~3 (Intro, Behavioral Cloning, PyTorch) 완료 — Policy Gradient/PPO는 아직</li>
+                    <li>오늘 다룰 논문은 새로운 RL 알고리즘을 만드는 논문이 아니라, <span class="accent">기존 RL 기술(MDP, PPO)을 가져와 조세 정책 문제에 적용한 응용 논문</span>입니다.</li>
+                    <li>그래서 오늘은 딱 필요한 만큼의 <span class="accent">RL 어휘</span> → <span class="highlight">논문 본론</span> → <span class="secondary">경제학적 비판</span> 순으로 진행</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 3 -->
+        <div class="slide" data-notes="아타리 벽돌깨기로 예를 들면 state는 화면 픽셀, action은 패들을 좌우로 움직이는 것, reward는 벽돌을 깰 때마다 받는 점수입니다.">
+            <div class="section-label">Act I — The Sandbox</div>
+            <h2 class="slide-title">강화학습의 기본 어휘 3개</h2>
+            <div class="content-area glass-card">
+                <ul>
+                    <li><span class="highlight">State (상태) s:</span> 에이전트가 관측하는 환경의 현재 모습</li>
+                    <li><span class="highlight">Action (행동) a:</span> 에이전트가 선택할 수 있는 행동</li>
+                    <li><span class="highlight">Reward (보상) r:</span> 행동 후 환경이 주는 피드백 (스칼라 값)</li>
+                </ul>
+                <div class="callout" style="margin-top: 2rem;">
+                    <strong>목표:</strong> 누적 보상(Σ γᵗrₜ)을 최대화하는 정책(policy) <span class="code-block" style="padding: 0.2rem 0.5rem; margin:0;">π(a|s)</span>를 학습
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4 -->
+        <div class="slide" data-notes="DQN은 '이 행동을 하면 대충 몇 점을 받을까'를 예측하는 쪽이고, PPO는 '이 상황에서 어떤 행동을 할지'를 직접 확률분포로 내놓는 쪽입니다.">
+            <h2 class="slide-title">RL 알고리즘의 두 전통</h2>
+            <div class="content-area two-cols">
+                <div class="glass-card">
+                    <h3 style="color: var(--primary); margin-bottom: 1rem;">Value-based</h3>
+                    <p><strong>DQN (Mnih et al., 2013)</strong></p>
+                    <p style="margin-top: 1rem; color: var(--text-muted);">"각 행동의 가치(Q값)를 추정하고, 가장 높은 걸 고른다"</p>
+                </div>
+                <div class="glass-card">
+                    <h3 style="color: var(--secondary); margin-bottom: 1rem;">Policy-based</h3>
+                    <p><strong>PPO (Schulman et al., 2017)</strong></p>
+                    <p style="margin-top: 1rem; color: var(--text-muted);">"행동을 선택하는 정책 자체를 직접 학습한다"</p>
+                </div>
+            </div>
+            <div class="content-area" style="flex: 0; margin-top: 1rem;">
+                <div class="callout" style="border-left-color: var(--highlight);">
+                    <strong>Bottom note:</strong> 오늘 논문은 전부 <span class="highlight">Policy-based(PPO)</span>로 학습됨
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5 -->
+        <div class="slide" data-notes="저희가 NLP 스터디 때 다룬 RLHF의 그 PPO 맞습니다.">
+            <h2 class="slide-title">PPO — 딱 필요한 만큼만</h2>
+            <div class="content-area glass-card">
+                <ul>
+                    <li>정책 업데이트 보폭이 너무 크면 정책이 붕괴할 위험</li>
+                    <li>TRPO(Schulman et al., 2015)는 2차 미분으로 이를 막음 → 연산 비용 큼</li>
+                    <li><span class="highlight">PPO의 해법:</span> 새 정책이 이전 정책 대비 [0.8배, 1.2배] 범위를 벗어나면 더 이상 보상/페널티를 주지 않는다 (Clipping)</li>
+                    <li><span class="accent">한 줄 요약:</span> "좋은 방향이든 나쁜 방향이든, 한 번에 너무 급격히 바뀌지 않도록 브레이크를 거는 안정적인 알고리즘"</li>
+                    <li>현재 RL 업계 표준이며, RLHF(ChatGPT)의 핵심 엔진</li>
+                </ul>
+                <div class="code-block">
+                    L_CLIP = E[min(r(θ)·Â, clip(r(θ), 1-ε, 1+ε)·Â)]
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6 -->
+        <div class="slide" data-notes="경제학의 동적 최적화 프레임워크와 강화학습의 MDP는 서로 다른 분야에서 발전했지만 수식 구조가 1:1로 정확히 대응합니다.">
+            <div class="section-label">🌟 BRIDGE</div>
+            <h2 class="slide-title">동적 최적화(경제학) ↔ 강화학습(RL) 1:1 대응</h2>
+            <div class="content-area">
+                <table style="font-size: 0.95rem; width: 100%;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 10px 14px; width: 50%;">경제학 (동적 최적화)</th>
+                            <th style="padding: 10px 14px; width: 50%;">강화학습 (RL / MDP)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>상태변수 X_t &amp; 선택변수 Y_t</td><td>State s_t &amp; Action a_t</td></tr>
+                        <tr><td>상태방정식 X_{t+1} &amp; 순편익 π_t</td><td>전이함수 P(s'|s,a) &amp; 보상 r_t</td></tr>
+                        <tr><td>목적함수 max Σ βᵗ π_t (할인인자 β)</td><td>목적함수 max E[Σ γᵗ r_t] (할인율 γ)</td></tr>
+                        <tr><td>코스테이트 변수 λ_t (그림자가격)</td><td>가치함수의 기울기 ∂V/∂s</td></tr>
+                        <tr><td>해밀토니안 H = π + λ·f(X,Y)</td><td>벨만 방정식 Q(s,a) = r + γV(s')</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Slide 7 -->
+        <div class="slide" data-notes="이 대응이 왜 중요하냐면, 오늘 논문에서 '정부가 세율을 조정하는 문제'는 경제학적으로는 최적 조세의 동적 확장 문제이기도 합니다.">
+            <h2 class="slide-title">최적화 조건도 한 줄씩 대응한다</h2>
+            <div class="content-area glass-card">
+                <div class="two-cols" style="align-items: center;">
+                    <div style="font-size: 1.4rem; display: flex; flex-direction: column; gap: 1.5rem;">
+                        <div><strong>1. 선택변수 조건</strong><br>∂H/∂Y = 0 ↔ 벨만의 max_a</div>
+                        <div><strong>2. 코스테이트 방정식</strong><br>∂H/∂X = rλ − λ̇ ↔ 가치함수의 시간적 일관성(TD 업데이트)</div>
+                        <div><strong>3. 상태방정식</strong><br>Ẋ = F(X) − Y ↔ 환경의 전이(transition)</div>
+                        <div><strong>4. 횡단조건</strong><br>lim_{t→∞} e^{−rt}λ(t)X(t) = 0 ↔ 종단·경계 조건</div>
+                    </div>
+                </div>
+                <div class="callout" style="margin-top: 1rem; border-left-color: var(--highlight);">
+                    ⚠️ 해밀토니안(폰트리아긴 최대원리)과 벨만 방정식(동적계획법)은 완전히 같은 것이 아니라, 같은 문제를 연속시간/이산시간에서 각각 푸는 쌍대적 접근입니다.
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8 -->
+        <div class="slide" data-notes="정부가 세율을 15%로 할지 40%로 할지 실제로 A/B 테스트를 해볼 수는 없습니다.">
+            <div class="section-label">Act II — Why Simulation?</div>
+            <h2 class="slide-title">형평성 vs 생산성 — 풀리지 않는 트레이드오프</h2>
+            <div class="content-area" style="gap: 2rem;">
+                <div class="glass-card">
+                    세율 ↑ → 재분배로 <span class="highlight">형평성(Equality)</span> 개선, but 근로의욕 저하로 <span class="secondary">생산성(Productivity)</span> 하락
+                </div>
+                <div class="glass-card">
+                    정부는 실제 경제에서 세율을 마음대로 실험할 수 없음 <span class="text-muted">(위험 + 데이터 부족)</span>
+                </div>
+                <div class="glass-card">
+                    기존 경제학 모델은 분석 가능하도록 <strong>단순화된 가정을 전제</strong> → 현실의 복잡한 상호작용을 놓침
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9 -->
+        <div class="slide" data-notes="이게 오늘 발표에서 AI가 '이긴다'고 자랑하는 바로 그 벤치마크입니다.">
+            <h2 class="slide-title">비교 대상이 되는 최적과세이론</h2>
+            <div class="content-area glass-card">
+                <ul>
+                    <li><strong>Mirrlees(1971)에서 출발:</strong> 정부는 개인의 생산성을 못 보고 소득만 관찰 가능 (비대칭 정보)</li>
+                    <li><span class="highlight">Saez (2001):</span> 세율 변화의 효과를 3가지로 분해
+                        <ul style="margin-top: 1rem;">
+                            <li><span class="accent">기계적 효과 (Mechanical)</span> — 행동 불변 가정 시 세수 증가분</li>
+                            <li><span class="secondary">행동 효과 (Behavioral)</span> — 근로의욕 감소로 인한 세수 감소분</li>
+                            <li><span class="highlight">후생 효과 (Welfare)</span> — 개인 효용 변화</li>
+                        </ul>
+                    </li>
+                    <li style="margin-top: 1rem;"><strong>3가지 합이 0이 되는 지점 = 최적 세율</strong></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 10 -->
+        <div class="slide" data-notes="RL 에이전트는 이 '행동 효과'를 실제로 시뮬레이션 속에서 학습해서 반영하는데, Saez 공식은 이걸 고정된 숫자로 가정할 수밖에 없습니다.">
+            <h2 class="slide-title">Saez의 '행동 효과'는 정적 탄력성으로 가정된다</h2>
+            <div class="content-area glass-card">
+                <ul>
+                    <li>Saez 공식은 소득분포 f(z)와 <span class="highlight">탄력성 e(z)</span>를 입력으로 받는 수식</li>
+                    <li>세율 변화에 대한 사람들의 반응(탄력성)을 <span class="secondary">고정된 숫자</span>로 놓고 계산</li>
+                    <li>실제로는 조세회피, 소득 시점 조정 같은 동적 전략은 반영 못 함</li>
+                </ul>
+                <div class="callout" style="margin-top: 2rem; border-left-color: var(--highlight); background: rgba(255, 215, 0, 0.15);">
+                    <strong>이 전제 하나가 후반부 비판의 핵심 복선입니다.</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11 -->
+        <div class="slide" data-notes="간단히 말해 마인크래프트 비슷한 미니 경제 게임을 만들고, 그 안에 AI 노동자 4명과 AI 정부를 같이 풀어놓은 겁니다.">
+            <div class="section-label">Act III-A — 설계와 방법론</div>
+            <h2 class="slide-title">경제를 통째로 시뮬레이션한다</h2>
+            <div class="content-area glass-card">
+                <ul>
+                    <li>서로 다른 기술 수준(skill)을 가진 <strong>4명의 에이전트</strong>가 2D 공간에서 활동</li>
+                    <li>자원(나무🪵, 돌🪨) 채집(Gather) → 코인💰으로 거래(Trade) → 집🏠 건축(Build)로 소득 창출</li>
+                    <li><span class="highlight">정부(Social Planner)</span>는 이 경제를 관찰하며 세율을 조정</li>
+                </ul>
+                <div class="flow-diagram">
+                    Gather <span>→</span> Trade <span>→</span> Build <span>→</span> Income <span>→</span> Tax
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 12 -->
+        <div class="slide" data-notes="여기서 PPO가 실제로 등장합니다.">
+            <h2 class="slide-title">두 개의 학습 루프가 동시에 돌아간다</h2>
+            <div class="content-area two-cols">
+                <div class="glass-card" style="border-top: 4px solid var(--primary);">
+                    <h3 style="color: var(--primary); margin-bottom: 1rem;">Inner-loop (에이전트)</h3>
+                    <p>4명의 노동자 AI가 <span class="highlight">세후 효용</span>을 극대화</p>
+                </div>
+                <div class="glass-card" style="border-top: 4px solid var(--secondary);">
+                    <h3 style="color: var(--secondary); margin-bottom: 1rem;">Outer-loop (플래너/정부)</h3>
+                    <p><span class="highlight">사회 후생</span> 극대화, 7개 구간 소득세율 조정</p>
+                </div>
+            </div>
+            <div class="content-area" style="flex: 0; text-align: center;">
+                <h3 style="color: var(--text-muted); margin-top: 2rem;">둘 다 PPO로 학습됨</h3>
+            </div>
+        </div>
+
+        <!-- Slide 13 -->
+        <div class="slide" data-notes="이 부분은 논문을 꼼꼼히 안 읽으면 잘못 말하기 쉬운 디테일입니다.">
+            <h2 class="slide-title">'정책망 5개'가 아니라, 가중치 공유 구조입니다</h2>
+            <div class="content-area glass-card" style="text-align: center;">
+                <div style="font-size: 2rem; margin-bottom: 2rem;">
+                    <span style="color: var(--text-muted);">에이전트 1, 2, 3, 4</span><br>
+                    ↓<br>
+                    <span style="color: var(--primary); font-weight: bold; font-size: 2.5rem; padding: 1rem; border: 2px solid var(--primary); border-radius: 8px; display: inline-block; margin: 1rem 0;">단일 에이전트 정책망 (Shared Weights)</span><br>
+                    ↓<br>
+                    <span style="color: var(--text-muted);">각자의 Local State(위치, skill 등)에 따라 다른 Action 출력</span>
+                </div>
+                <hr style="border-color: var(--glass-border); margin: 2rem 0;">
+                <div style="font-size: 2rem;">
+                    <span style="color: var(--secondary); font-weight: bold; font-size: 2.5rem; padding: 1rem; border: 2px solid var(--secondary); border-radius: 8px; display: inline-block;">플래너 정책망 1개 별도</span>
+                </div>
+                <h3 style="margin-top: 2rem;">총 <span class="highlight">2개</span>의 정책망만 존재</h3>
+            </div>
+        </div>
+
+        <!-- Slide 14 -->
+        <div class="slide" data-notes="이 곱셈 형태의 후생함수를 꼭 기억해두세요 — 후반부에서 비판적으로 다시 봅니다.">
+            <h2 class="slide-title">무엇을 최적화하나</h2>
+            <div class="content-area glass-card">
+                <div class="code-block" style="text-align: left;">
+                    <span style="color: #a0a5b1;">// 0~1, 1이면 완전평등</span><br>
+                    eq(x) = 1 − gini(x) · N/(N−1)<br><br>
+                    
+                    <span style="color: #a0a5b1;">// 전체 자산(소득) 합</span><br>
+                    prod(x) = Σxᵢ<br><br>
+
+                    <span style="color: #a0a5b1;">// 주 목적함수: 평등과 생산성의 곱</span><br>
+                    <span style="color: var(--highlight);">swf = eq × prod</span>
+                </div>
+                <ul>
+                    <li>세율은 7개 소득 구간, 구간 경계 고정, <span class="accent">세율만 학습</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 15 -->
+        <div class="slide" data-notes="정부가 세율을 바꾸는 순간, 노동자들이 풀어야 하는 문제(MDP) 자체가 바뀌어버립니다.">
+            <h2 class="slide-title">서로가 서로에게 움직이는 과녁</h2>
+            <div class="content-area glass-card">
+                <ul>
+                    <li>논문 표현: <strong>"플래너가 에이전트의 MDP 자체를 바꾼다"</strong></li>
+                    <li>에이전트 행동 변화 → 최적 세율 변화 → 에이전트 행동 변화 <span class="secondary">(Non-stationary)</span></li>
+                    <li>한쪽이 급격히 정책을 바꾸면 전체 시스템 붕괴 → <span class="highlight">PPO의 클리핑이 이를 방지</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 16 -->
+        <div class="slide" data-notes="학습 규모: RLlib, PPO+Adam, 환경 60개 병렬, Phase 2에 4억 샘플.">
+            <h2 class="slide-title">그래도 부족하다 — 2가지 추가 장치</h2>
+            <div class="content-area two-cols">
+                <div class="glass-card">
+                    <h3 style="color: var(--primary); margin-bottom: 1rem;">1. 2단계 학습 + 세금 커리큘럼</h3>
+                    <ul>
+                        <li><span class="highlight">Phase 1:</span> 무세금 자유시장에서 에이전트만 먼저 학습</li>
+                        <li><span class="highlight">Phase 2:</span> 세금 활성화 + 플래너 동시 학습. 최대 허용 한계세율 10%→100% 선형 어닐링</li>
+                    </ul>
+                </div>
+                <div class="glass-card">
+                    <h3 style="color: var(--secondary); margin-bottom: 1rem;">2. 엔트로피 정규화 (A3C 계보)</h3>
+                    <ul>
+                        <li>초반엔 정부가 다양한 세율을 무작위로 탐색, 점진적으로 엔트로피 감소</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 17 -->
+        <div class="slide" data-notes="'AI가 다 이겼다'가 아니라 '손실을 가장 적게 내면서 평등을 가장 많이 얻었다'가 정확한 서술입니다.">
+            <div class="section-label">Act III-B — 결과</div>
+            <h2 class="slide-title">AI가 찾은 세율이 경제학 최고 이론보다 낫다</h2>
+            <div class="content-area">
+                <div class="big-number">+16%</div>
+                <div class="glass-card">
+                    <ul>
+                        <li>eq × prod 트레이드오프에서 <strong>Saez 대비 16% 개선</strong> (시드 10개 평균)</li>
+                        <li>세금은 언제나 자유시장보다 생산성을 낮춘다 — AI도 예외 아님. 다만 <span class="highlight">생산성 손실이 가장 작으면서 평등은 가장 많이 얻음</span></li>
+                        <li>도출된 세율 구조: <strong>비단조</strong> (progressive+regressive 혼합)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 18 -->
+        <div class="slide" data-notes="논문 결과를 재현한 게 아닙니다. 저장소에 같이 들어있는 단순화 경제에서 정적 최적화로 같은 논리를 돌려봤습니다.">
+            <h2 class="slide-title">직접 돌려봤습니다: 미니 AI Economist</h2>
+            <h3 style="color: var(--secondary); margin-bottom: 1.5rem;">⚠️ 논문 재현 아님 — DGX Spark GB10에서 직접 실행</h3>
+            <div class="content-area">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>정책</th>
+                            <th>평등 eq</th>
+                            <th>생산성 prod</th>
+                            <th>eq×prod</th>
+                            <th>Saez 대비</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>자유시장</td><td>0.617</td><td>451.6</td><td>278.8</td><td><span style="color: var(--primary);">+4.9%</span></td></tr>
+                        <tr><td>미 연방 2018</td><td>0.714</td><td>344.5</td><td>246.1</td><td><span style="color: var(--secondary);">−7.4%</span></td></tr>
+                        <tr><td>Saez (고정점)</td><td>0.628</td><td>423.2</td><td>265.8</td><td>0.0%</td></tr>
+                        <tr><td><strong>미니-AI</strong></td><td><strong>0.699</strong></td><td><strong>421.9</strong></td><td><strong>294.8</strong></td><td><strong><span style="color: var(--primary);">+10.9%</span></strong></td></tr>
+                    </tbody>
+                </table>
+                <div class="img-container" style="max-height: 200px;">
+                    <img src="experiments/figures/e5_mini_ai_economist.png" alt="미니 AI Economist 결과">
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 19 -->
+        <div class="slide" data-notes="Saez가 쓰는 자신의 언어(기계적 효과)로 왜 졌는지 설명이 됩니다.">
+            <h2 class="slide-title">왜 Saez가 졌는가 ① 기계적 효과</h2>
+            <div class="content-area two-cols">
+                <div class="glass-card" style="display: flex; flex-direction: column; justify-content: center;">
+                    <ul>
+                        <li>Saez 결과는 <strong>소득분포 형태</strong>에 민감: 로그정규형 → <span class="secondary">역진세</span>, 파레토형 → <span class="primary">누진세</span></li>
+                        <li>이 시뮬레이션의 소득분포는 <strong>로그정규형</strong>에 가까움 → <span class="highlight">Saez 공식이 역진적 세율표를 산출</span></li>
+                        <li>역진세 = 재분배가 약함 = 낮은 평등도</li>
+                    </ul>
+                </div>
+                <div class="img-container">
+                    <img src="experiments/figures/e1_saez_distribution.png" alt="소득 분포 및 Saez 공식">
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 20 -->
+        <div class="slide" data-notes="이게 이 발표의 하이라이트입니다. Saez의 '행동 효과'는 정적 탄력성 수식으로만 가정되는데, RL 에이전트는 분업 해체라는 실제 행동 변화를 시뮬레이션 속에서 학습해서 반영했습니다.">
+            <h2 class="slide-title" style="color: var(--highlight);">왜 Saez가 졌는가 ② 행동 효과 (하이라이트)</h2>
+            <div class="content-area glass-card" style="border-color: var(--highlight); box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);">
+                <h3 style="margin-bottom: 1.5rem;">분업이 무너진다 — Saez 세제의 숨은 대가</h3>
+                <ul>
+                    <li>Saez 세제 아래: 고숙련 "buyer-and-builder"가 자원을 <span class="secondary">직접 채집 늘림</span> → 저숙련에게서 덜 구매</li>
+                    <li>거래 위축 → 저숙련 에이전트 소득 감소 → <span class="highlight">분업(specialization) 해체</span></li>
+                    <li>분업 해체 → 건축 소득 감소 → <span class="secondary">생산성 저하</span></li>
+                </ul>
+                <div class="flow-diagram" style="font-size: 1.4rem; background: rgba(0,0,0,0.3);">
+                    세율↑ <span>→</span> 고숙련 직접채집↑ <span>→</span> 거래↓ <span>→</span> 저숙련 소득↓ <span>→</span> 분업 해체 <span>→</span> 생산성↓
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 21 -->
+        <div class="slide" data-notes="부등식 방향이 왜 뒤집히는지까지 설명하면 수학적 설득력이 있습니다.">
+            <h2 class="slide-title">조세 회피: 소득을 교대로 번다 — Jensen 부등호가 뒤집힌다</h2>
+            <div class="content-area two-cols">
+                <div class="glass-card">
+                    <ul>
+                        <li><span class="highlight">상식:</span> 누진세 아래선 소득을 매년 평탄하게 버는 게 절세 (Jensen 부등식)</li>
+                        <li><span class="highlight">실제 관측:</span> 에이전트들은 고소득/저소득을 <strong>번갈아 버는 전략</strong>을 학습</li>
+                        <li><strong>이유:</strong> 세율표에 역진 구간이 있어 Jensen 부등호가 뒤집힘</li>
+                        <li style="margin-top: 1rem;"><span class="primary">누진세(미 연방):</span> 교대 전략 유리한 구간 <strong>0/7</strong></li>
+                        <li><span class="secondary">역진세(Saez):</span> 교대 전략 유리한 구간 <strong>7/7</strong></li>
+                    </ul>
+                </div>
+                <div class="img-container">
+                    <img src="experiments/figures/e4_tax_avoidance.png" alt="조세 회피 전략">
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 22 -->
+        <div class="slide" data-notes="이 지점은 컴공 전공이신 분들은 아마 짚기 어려운 지점일 겁니다.">
+            <div class="section-label">Act III-C — 비판적 검토</div>
+            <h2 class="slide-title">성과 지표 자체가 하나의 가치판단이다</h2>
+            <div class="content-area two-cols">
+                <div class="glass-card">
+                    <ul>
+                        <li>주 목적함수: <span class="highlight">swf = eq × prod</span> (곱셈형)</li>
+                        <li>이건 공리주의(Σuᵢ)도, 롤스주의(min uᵢ)도, Atkinson/CES 계열도 아님</li>
+                        <li>곱셈형은 <strong>'평등과 생산성이 완전보완재'</strong>라는 강한 규범적 가정</li>
+                        <li>'16% 개선'은 이 특정 후생함수를 받아들일 때만 성립</li>
+                    </ul>
+                    <div class="callout" style="margin-top: 2rem;">
+                        <strong>Key finding:</strong> 후생함수 7종 비교 시 1위가 3종류로 갈림
+                    </div>
+                </div>
+                <div class="img-container">
+                    <img src="experiments/figures/e3_welfare_functions.png" alt="후생함수 비교">
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 23 -->
+        <div class="slide" data-notes="'AI가 경제학을 이겼다'는 단순 서사를 넘어서, 비교 실험 설계 자체를 평가하는 수준의 질문입니다.">
+            <h2 class="slide-title">비교는 공정했나 — Saez 공식에 넣은 입력값의 문제</h2>
+            <div class="content-area two-cols">
+                <div class="glass-card">
+                    <ul>
+                        <li>Saez 베이스라인은 <span class="secondary">일정한(constant) 탄력성</span>을 가정</li>
+                        <li>논문도 인정: '탄력성 추정은 현실 경제에서 매우 비자명(highly non-trivial)하다'</li>
+                        <li>탄력성 e만 0.2→1.5로 바꿔보면: 평균 한계세율 <span class="highlight">67.5% → 28.6%</span> (38.9%p 폭)</li>
+                        <li>AI가 이긴 이유의 일부: <strong>'Saez 공식을 설계 정의역 밖에서 적용했기 때문'</strong>일 수 있음</li>
+                    </ul>
+                </div>
+                <div class="img-container">
+                    <img src="experiments/figures/e2_saez_elasticity.png" alt="탄력성과 한계세율">
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 24 -->
+        <div class="slide" data-notes="'AI가 사람한테도 이겼다'라고 과장하지 않고, 정확히 어떤 지표에서 어떻게 대등했는지 짚어드리겠습니다.">
+            <h2 class="slide-title">MTurk 인간 실험 결과를 정확히 읽으면</h2>
+            <div class="content-area glass-card">
+                <ul>
+                    <li>논문 원문(Abstract): '... an AI tax policy provides an equality-productivity trade-off that is <span class="highlight">similar</span> to the Saez framework...'</li>
+                    <li>형평성-생산성 트레이드오프에서는 <strong>대등(competitive)</strong>했을 뿐, 이기지 못함</li>
+                    <li>우위는 <strong>다른 지표</strong>(inverse-income weighted welfare)에서만 나타남</li>
+                    <li><span class="secondary">16%라는 숫자는 AI 시뮬레이션 안에서만 나온 숫자</span> — 인간 실험에서는 재현되지 않음</li>
+                </ul>
+                <div class="callout" style="margin-top: 2rem; border-left-color: var(--primary);">
+                    이걸 정확히 말하는 게 오히려 발표의 신뢰도를 높입니다.
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 25 -->
+        <div class="slide" data-notes="마무리는 오늘 배운 PPO를, 정책 설계라는 완전히 다른 도메인에 응용한 사례로 다시 정리합니다.">
+            <div class="section-label">Act IV — Conclusion</div>
+            <h2 class="slide-title">오늘의 핵심 요약</h2>
+            <div class="content-area glass-card">
+                <ul style="display: flex; flex-direction: column; gap: 1rem;">
+                    <li><strong>1.</strong> 경제학의 정적 수식(Saez) → RL 기반 동적 시뮬레이션으로 대체 가능성을 보여준 첫 사례</li>
+                    <li><strong>2.</strong> 방법론 핵심: PPO + 세금 커리큘럼 + 엔트로피 정규화로 다중 에이전트 학습 불안정성 해결</li>
+                    <li><strong>3.</strong> Saez의 패배는 '이론이 틀려서'만이 아니라 '정적 가정 + 좁은 적용 범위'의 결과일 수 있음</li>
+                    <li><strong>4.</strong> 경제학의 동적 최적화 전통(NDPF)과 RL의 MDP는 실은 같은 문제의 두 접근</li>
+                    <li><strong>5.</strong> <span class="highlight">"학생이 신경망을 익히고 → 알고리즘이 아케이드 게임을 정복하고 → 인공사회가 조세정책을 최적화한다"</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 26 -->
+        <div class="slide title-slide" data-notes="예상 질문 대비 카드가 준비되어 있습니다.">
+            <h1 style="font-size: 6rem; margin-bottom: 3rem;">Q&A</h1>
+            <div class="content-area glass-card" style="text-align: left; max-width: 800px; margin: 0 auto; font-size: 1.2rem;">
+                <h3 style="color: var(--primary); margin-bottom: 1rem;">References</h3>
+                <ul>
+                    <li>Zheng et al. (2020), The AI Economist, arXiv:2004.13332</li>
+                    <li>Schulman et al. (2017), Proximal Policy Optimization Algorithms, arXiv:1707.06347</li>
+                    <li>Schulman et al. (2015), Trust Region Policy Optimization, arXiv:1502.05477</li>
+                    <li>Mnih et al. (2016), Asynchronous Methods for Deep RL, arXiv:1602.01783</li>
+                    <li>Saez (2001), Using Elasticities to Derive Optimal Income Tax Rates</li>
+                    <li>Mankiw, Weinzierl, Yagan (2009), Optimal Taxation in Theory and Practice</li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Speaker Notes Panel -->
+    <div class="speaker-notes-panel" id="speaker-notes-panel">
+        <div class="notes-header">
+            <span>Speaker Notes</span>
+            <span style="font-size: 0.9rem; color: var(--text-muted);">Press 'N' to toggle</span>
+        </div>
+        <div class="notes-content" id="notes-content"></div>
+    </div>
+
+    <!-- Help Overlay -->
+    <div class="help-overlay" id="help-overlay">
+        <div class="help-content">
+            <h2>Keyboard Shortcuts</h2>
+            <div class="help-row"><span>Next Slide</span> <kbd>→</kbd> or <kbd>Space</kbd></div>
+            <div class="help-row"><span>Previous Slide</span> <kbd>←</kbd></div>
+            <div class="help-row"><span>Toggle Fullscreen</span> <kbd>F</kbd></div>
+            <div class="help-row"><span>Toggle Speaker Notes</span> <kbd>N</kbd></div>
+            <div class="help-row"><span>Toggle Help</span> <kbd>?</kbd></div>
+            <div style="text-align: center; margin-top: 2rem;">
+                <button onclick="toggleHelp()" style="padding: 8px 16px; background: var(--primary); color: #000; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const progressBar = document.getElementById('progress-fill');
+        const slideCounter = document.getElementById('slide-counter');
+        const notesContent = document.getElementById('notes-content');
+        const notesPanel = document.getElementById('speaker-notes-panel');
+        const helpOverlay = document.getElementById('help-overlay');
+
+        function updateSlide() {
+            slides.forEach((slide, index) => {
+                if(index === currentSlide) {
+                    slide.classList.add('active');
+                    notesContent.innerText = slide.getAttribute('data-notes') || "No notes for this slide.";
+                } else {
+                    slide.classList.remove('active');
+                }
+            });
+            
+            // Update progress & counter
+            const progress = ((currentSlide + 1) / totalSlides) * 100;
+            progressBar.style.width = `${progress}%`;
+            slideCounter.innerText = `${currentSlide + 1} / ${totalSlides}`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+
+        function toggleNotes() {
+            notesPanel.classList.toggle('visible');
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        function toggleHelp() {
+            helpOverlay.classList.toggle('visible');
+        }
+
+        // Keyboard events
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key.toLowerCase() === 'n') {
+                e.preventDefault();
+                toggleNotes();
+            } else if (e.key.toLowerCase() === 'f') {
+                e.preventDefault();
+                toggleFullscreen();
+            } else if (e.key === '?') {
+                e.preventDefault();
+                toggleHelp();
+            } else if (e.key === 'Escape' && helpOverlay.classList.contains('visible')) {
+                toggleHelp();
+            }
+        });
+
+        // Click on help overlay to close
+        helpOverlay.addEventListener('click', (e) => {
+            if (e.target === helpOverlay) toggleHelp();
+        });
+
+        // Init
+        updateSlide();
+    </script>
+</body>
+</html>
