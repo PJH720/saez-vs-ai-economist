@@ -98,7 +98,13 @@ cd experiments
 ../.venv/bin/python e4_tax_avoidance.py
 ../.venv/bin/python e5_mini_ai_economist.py   # must precede E3
 ../.venv/bin/python e3_welfare_functions.py   # reads results/e5_incomes.npz
+cd ..
 ```
+
+Then confirm nothing drifted. Note the `cd ..` above — run this from the repo
+root; from inside `experiments/` the path resolves to
+`experiments/experiments/results/` and git aborts with
+`fatal: ambiguous argument`:
 
 ```bash
 git diff --stat experiments/results/    # expect empty output
@@ -132,6 +138,40 @@ comparable:
   the 7 brackets. Documented in `experiments/e5_mini_ai_economist.py`.
 - **Only 4 agents.** This is itself E1's point: the Saez formula depends on the
   income distribution's Pareto tail, and four points cannot form a tail.
+
+## Where this could go next
+
+Each of these turns an argument the current experiments make *rhetorically* into
+something measurable, and each is reachable with the helpers already in
+`experiments/aie_lib.py`.
+
+**E6 — Put a number on the four-agent objection.** E1 argues that four income
+points cannot form a Pareto tail, so the Saez formula is being applied outside its
+design domain. That is currently an argument. Sweeping N from 4 to ~4000 and
+plotting ρ and the mean marginal rate against N would show *where* the schedule
+stabilizes — and therefore how far from that regime the paper's 4-agent comparison
+sits. Reuses `saez_schedule` and `lognormal_incomes(n=N)` directly.
+
+**E7 — Test the paper's own stated alternative.** E3 scores 7 welfare functions,
+but not the linear-weighted sum of utilities that the paper itself raises (L910 ff.)
+as an alternative to `eq × prod`. Sweeping the weights across that family would
+answer a sharper question than E3 currently does: is there *any* weighting inside
+the paper's own proposed alternative under which the AI schedule ranks first? A
+negative answer would be a much stronger result than "the winner depends on the
+metric."
+
+**E8 — Check whether the Saez fixed point is self-consistent here.** E2 shows the
+baseline swings 38.9 pp with the assumed elasticity; E4 shows agents have a
+mechanical incentive to game regressive segments. Together they imply elasticity
+is not a constant in this economy — so iterate: compute the Saez schedule at
+elasticity *e*, measure the elasticity actually *revealed* by agents' best
+responses in E5's economy, feed it back, repeat. Either it converges (and the
+paper's constant-elasticity baseline has a defensible value) or it does not (and
+the baseline is under-determined). Neither outcome is currently known.
+
+Deliberately **not** planned: RL training. Reproducing the paper's 400M-sample
+two-level PPO run is a different project with different hardware requirements, and
+nothing above needs it.
 
 ## Layout
 
@@ -199,6 +239,29 @@ Saez(2001) 베이스라인, 특정 후생함수로 채점. 비교는 RL이 잘 �
 
 전체 실습 기록은 [`experiments/RESULTS.md`](experiments/RESULTS.md)에 설정값(분포 모수,
 탄력성, 스킬, 탐색 횟수, seed)과 예상 질문 대비까지 그대로 있습니다.
+
+### 다음 단계 (Where this could go next)
+
+지금 실험들이 *논증으로* 하고 있는 주장을 *측정 가능한 것*으로 바꾸는 세 가지입니다.
+모두 기존 `experiments/aie_lib.py` 헬퍼로 구현 가능합니다.
+
+- **E6 — 4명 비판을 수치화.** E1은 "소득 4개 점으로는 파레토 꼬리를 만들 수 없다"고
+  논증하지만 아직 논증입니다. N을 4→4000으로 스윕해 ρ와 평균 한계세율을 N에 대해 그리면
+  세율표가 *어디서* 안정화되는지, 따라서 논문의 4명 비교가 그 영역에서 얼마나 떨어져
+  있는지가 드러납니다
+- **E7 — 논문이 스스로 제시한 대안을 검증.** E3는 7개 후생함수를 쓰지만, 논문 자신이
+  `eq × prod`의 대안으로 언급한 선형가중 효용합(L910~)은 빠져 있습니다. 그 계열의 가중치를
+  스윕하면 "지표에 따라 승자가 갈린다"보다 훨씬 강한 질문에 답할 수 있습니다 —
+  *논문이 제안한 대안 계열 안에서 AI 세율표가 1위가 되는 가중치가 하나라도 존재하는가?*
+- **E8 — Saez 고정점이 이 경제에서 자기일관적인가.** E2는 탄력성 가정에 따라 38.9%p
+  흔들림을, E4는 역진 구간을 이용할 기계적 유인을 보였습니다. 둘을 합치면 이 경제에서
+  탄력성은 상수가 아니라는 뜻입니다. 탄력성 e로 Saez 세율표를 만들고 → E5 경제에서
+  에이전트 최적반응이 *실제로 드러내는* 탄력성을 측정하고 → 되먹여 반복. 수렴하면
+  상수 탄력성 베이스라인에 방어 가능한 값이 있는 것이고, 수렴하지 않으면 베이스라인이
+  미결정이라는 뜻입니다. 어느 쪽인지 현재 알려져 있지 않습니다
+
+**의도적으로 계획하지 않은 것:** RL 학습. 논문의 4억 샘플 2단계 PPO 재현은 하드웨어 요구가
+다른 별개 프로젝트이며, 위 세 가지 중 어느 것도 그것을 필요로 하지 않습니다.
 
 ---
 

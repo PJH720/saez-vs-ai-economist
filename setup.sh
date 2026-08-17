@@ -78,8 +78,11 @@ Setup complete. Run the experiments (E5 must precede E3 -- E3 reads E5's output)
   ../.venv/bin/python e4_tax_avoidance.py
   ../.venv/bin/python e5_mini_ai_economist.py
   ../.venv/bin/python e3_welfare_functions.py
+  cd ..
 
-Then confirm nothing drifted:
+Then confirm nothing drifted -- from the repo root, not from experiments/
+(from there the path becomes experiments/experiments/results/ and git aborts
+with "fatal: ambiguous argument"):
 
   git diff --stat experiments/results/     # expect empty
 EOF

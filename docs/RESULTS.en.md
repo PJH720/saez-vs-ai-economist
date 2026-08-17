@@ -155,22 +155,31 @@ equality and productivity come from `social_metrics` unchanged.
 |---|---|---|---|---|---|
 | Paper: eq × prod | 279 | 246 | 266 | **295** | Mini AI Economist |
 | Utilitarian Σuᵢ | **226** | 213 | 225 | 222 | Free market |
-| Rawlsian min uᵢ | 26.5 | 35.5 | 30.2 | **35.5** | Mini AI Economist |
+| Rawlsian min uᵢ | 26.5 | 35.5 | 30.2 | 35.5 | tie — US Federal / Mini-AI |
 | Atkinson ε=0.5 | **105** | 82.9 | 99 | 101 | Free market |
 | Atkinson ε=1 | **98.2** | 79.9 | 92.8 | 96.6 | Free market |
 | Atkinson ε=2 | 86.7 | 74.6 | 82.8 | **89.8** | Mini AI Economist |
 | Inverse-income weighted Σuᵢ/zᵢ | 2.00 | **2.72** | 2.23 | 2.40 | US Federal 2018 |
 
-**Result:** the winner splits **three ways** across welfare functions — US Federal
-2018, Mini AI Economist, and Free market.
+**Result:** the winner splits **three ways** across welfare functions — Mini AI
+Economist, Free market, and US Federal 2018.
 
 Under the paper's metric (`eq × prod`) the **Mini AI Economist** wins; under
-utilitarian Σuᵢ the **Free market**; under Rawlsian min uᵢ the **Mini AI Economist**;
-under strongly inequality-averse Atkinson ε=2 the **Mini AI Economist**.
+utilitarian Σuᵢ and Atkinson ε=0.5 / ε=1 the **Free market**; under strongly
+inequality-averse Atkinson ε=2 the **Mini AI Economist** again; and under
+inverse-income-weighted welfare, **US Federal 2018**.
 
-*(Note: the Rawlsian row is a tie at reported precision — US Federal and Mini-AI
-both 35.5. The three-distinct-winners result rests on the utilitarian, Atkinson,
-and inverse-income-weighted rows, which are not close.)*
+> **On the Rawlsian row.** US Federal and Mini-AI are tied at reported precision
+> (both 35.5), so it is listed as a tie rather than a Mini-AI win. The
+> three-distinct-winners result does not depend on it — it rests on the
+> utilitarian, Atkinson, and inverse-income-weighted rows, where the margins are
+> not close.
+>
+> The Korean original ([`experiments/RESULTS.md`](../experiments/RESULTS.md))
+> reports this row as a Mini-AI win, because that is what the script's
+> `argmax` printed and that file is preserved exactly as presented on
+> 2026-08-13. The underlying numbers are identical; only this reading is
+> tightened here.
 
 **The point to make:** the *improvement* in "16% improvement" holds only if you
 accept `eq × prod`, a multiplicative welfare function. Multiplicative form treats
